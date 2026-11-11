@@ -6,6 +6,12 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.OpenableColumns;
+import android.print.PrintAttributes;
+import android.print.PrintManager;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import java.util.ArrayList;
+import java.util.List;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
@@ -26,6 +32,7 @@ import com.getcapacitor.annotation.PermissionCallback;
 )
 public class LibertyDevicePlugin extends Plugin {
     private boolean authenticating = false;
+    private final List<WebView> printWebViews = new ArrayList<>();
 
     @PluginMethod
     public void requestMicrophone(PluginCall call) {
@@ -84,6 +91,36 @@ public class LibertyDevicePlugin extends Plugin {
         response.put("name", name);
         response.put("mimeType", getContext().getContentResolver().getType(uri));
         call.resolve(response);
+    }
+
+    @PluginMethod
+    public void printHtml(PluginCall call) {
+        final String html = call.getString("html", "");
+        final String title = call.getString("title", "Ressources Liberté");
+        if (html.trim().isEmpty()) { call.reject("Aucune ressource à imprimer."); return; }
+        Activity activity = getActivity();
+        if (activity == null) { call.reject("Service d’impression indisponible."); return; }
+        activity.runOnUiThread(() -> {
+            try {
+                WebView printView = new WebView(getContext());
+                printWebViews.add(printView);
+                printView.setWebViewClient(new WebViewClient() {
+                    @Override public void onPageFinished(WebView view, String url) {
+                        try {
+                            PrintManager manager = (PrintManager) getContext().getSystemService(android.content.Context.PRINT_SERVICE);
+                            if (manager == null) { call.reject("Service d’impression indisponible."); return; }
+                            manager.print(title, printView.createPrintDocumentAdapter(title),
+                                new PrintAttributes.Builder()
+                                    .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                                    .setColorMode(PrintAttributes.COLOR_MODE_COLOR)
+                                    .build());
+                            call.resolve();
+                        } catch (Exception e) { call.reject("Impossible d’ouvrir l’impression PDF.", e); }
+                    }
+                });
+                printView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
+            } catch (Exception e) { call.reject("Impossible de préparer l’impression PDF.", e); }
+        });
     }
 
     @PluginMethod

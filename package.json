@@ -1,6 +1,6 @@
 {
   "name": "liberte-android",
-  "version": "1.6.5",
+  "version": "1.6.6",
   "private": true,
   "description": "Wrapper Android Capacitor pour Liberté",
   "scripts": {

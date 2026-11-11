@@ -1,18 +1,15 @@
-# Liberté Premium 1.6.1 — Français / Malagasy
+# Liberté Premium 1.6.6 — Français / Malagasy
 
-Application bilingue Web/PWA et projet Android Capacitor. Les données de suivi restent locales à l’appareil.
+Application bilingue locale Web/PWA et Android Capacitor. Les données de suivi restent sur l’appareil.
 
-## Nouveautés 1.6.1.1
+## Nouveautés 1.6.6
 
-- Enregistrement vocal depuis la Bibliothèque. Chaque prise ajoute une nouvelle ressource audio qui conserve le texte associé; les prises précédentes restent disponibles.
-- Catégories audio et vidéo séparées. Sur Android, les fichiers sont sélectionnés dans le stockage du téléphone et lus depuis leur URI d’origine, sans copie dans l’application.
-- Lecteur compact avec progression, arrêt, boucle, cadence et amplification du volume.
-- La voix synthétique du système et les boutons d’enregistrement dans les protocoles/rituels ne sont plus utilisés.
-- Rappel médical mieux contrasté, texte long plus lisible et espace de défilement suffisant au-dessus de la barre fixe.
-- Barre inférieure alignée sur le volet de navigation, sans raccourci Assistant.
+- Démarrage protégé par un écran portant le logo; la biométrie est demandée en premier, le PIN de Liberté reste un secours manuel.
+- Impression PDF des ressources cochées, depuis l’impression Android ou du navigateur.
+- Sélection globale « Tout cocher / Tout décocher » des ressources à utiliser.
+- Lecture plein écran des ressources texte, avec taille réglable et téléprompteur facultatif à vitesse réglable.
+- Variantes Android API 23 et API 29, avec APK Debug et deux APK Release signées via GitHub Actions.
 
-## Développement et compilation
+## Développement
 
-Exécute `npm ci`, puis `npm run sync`. Ouvre ensuite `android/` dans Android Studio ou utilise le workflow GitHub situé dans `GITHUB_WORKFLOW_A_COPIER`.
-
-L’APK doit être compilé dans GitHub Actions ou Android Studio. Le rapport de livraison `MISE-A-JOUR-1.6.md` détaille les vérifications et la limite de compilation locale.
+Exécute `npm ci`, puis `npm run sync`. Le workflow prêt à lancer se trouve dans `.github/workflows/android-release.yml`. Configure les secrets de signature décrits dans `README-ANDROID.txt`, puis lance le workflow depuis l’onglet Actions.

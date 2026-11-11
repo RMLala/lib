@@ -49,7 +49,7 @@ if(!source.includes('registerPlugin(LibertyDevicePlugin.class)')){
 const gradle=resolve(root,'android/app/build.gradle');
 let build=readFileSync(gradle,'utf8');
 if(!build.includes('androidx.biometric:biometric:'))build+='\ndependencies { implementation "androidx.biometric:biometric:1.1.0" }\n';
-build=build.replace(/versionCode\s+\d+/, 'versionCode 2026110501').replace(/versionName\s+"[^"]+"/, 'versionName "1.6.5"');
+build=build.replace(/versionCode\s+\d+/, 'versionCode 2026111101').replace(/versionName\s+"[^"]+"/, 'versionName "1.6.6"');
 writeFileSync(gradle,build);
 const manifest=resolve(root,'android/app/src/main/AndroidManifest.xml');
 let xml=readFileSync(manifest,'utf8');

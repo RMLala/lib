@@ -29,3 +29,10 @@ assert.match(nativePlugin, /^import com\.getcapacitor\.annotation\.PermissionCal
 assert.match(generatedPlugin, /^import com\.getcapacitor\.annotation\.PermissionCallback;$/m);
 
 require('node:test')('All audio permissions requested by Capacitor are declared',()=>{const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');const manifest=fs.readFileSync(path.join(__dirname,'../android/app/src/main/AndroidManifest.xml'),'utf8');for(const permission of ['RECORD_AUDIO','MODIFY_AUDIO_SETTINGS'])assert(manifest.includes('android.permission.'+permission),permission+' missing');});
+
+test('Android plugin exposes native print-to-PDF bridge', () => {
+  assert.match(nativePlugin, /void printHtml\(PluginCall call\)/);
+  assert.match(nativePlugin, /PrintManager/);
+  assert.match(nativePlugin, /createPrintDocumentAdapter/);
+  assert.match(generatedPlugin, /void printHtml\(PluginCall call\)/);
+});

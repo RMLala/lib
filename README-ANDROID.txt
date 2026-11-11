@@ -1,26 +1,17 @@
-LIBERTÉ — COMPILATION ANDROID ET GITHUB
+LIBERTÉ — BUILDS ANDROID 1.6.6
 
-Cette archive est le projet web + Capacitor de départ. Elle ne contient pas encore un APK compilé.
+Le projet utilise Capacitor et produit trois APK via GitHub Actions : Debug API 23, Release signée API 23 (Android 6+) et Release signée API 29 (Android 10+). Les deux APK Release utilisent la même clé. Le nom de version reste 1.6.6 ; le code de version distribué est 2026111101.
 
-A. COMPILATION AVEC GITHUB (sans installer Android Studio sur le PC)
-1. Crée un dépôt GitHub vide.
-2. Décompresse cette archive et envoie TOUS les fichiers qu’elle contient à la racine du dépôt. Il faut notamment voir package.json, package-lock.json, capacitor.config.ts et www/.
-3. Dans GitHub, ouvre l’onglet Actions et active les workflows si GitHub le demande.
-4. Copie `GITHUB_WORKFLOW_A_COPIER/build-apk.yml` vers `.github/workflows/build-apk.yml` à la racine du dépôt. Le workflow « Construire APK Android » démarre à chaque push sur main/master. Tu peux aussi le lancer dans Actions > Construire APK Android > Run workflow.
-5. À la fin, ouvre l’exécution réussie, va dans Artifacts et télécharge liberte-apk-debug.
-6. Décompresse le fichier téléchargé : app-debug.apk est l’APK de test. Transfère-le sur ton Android et autorise l’installation de cette source si Android le demande.
+GITHUB ACTIONS
+1. Décompresse le projet et pousse-le dans une branche dédiée du dépôt Liberté. Le workflow est déjà dans .github/workflows/android-release.yml.
+2. Configure ces secrets du dépôt, tous requis pour les APK Release : ANDROID_RELEASE_KEY_BASE64, ANDROID_RELEASE_STORE_PASSWORD, ANDROID_RELEASE_KEY_ALIAS et ANDROID_RELEASE_KEY_PASSWORD. La clé keystore ne doit jamais être ajoutée au projet.
+3. Lance « Liberté — builds Android » depuis Actions, ou pousse un tag v* / une branche codex/**, work/** ou release/**.
+4. Télécharge les artefacts liberte-debug-api23, liberte-release-api23 et liberte-release-api29.
 
-B. COMPILATION AVEC ANDROID STUDIO SOUS WINDOWS
-Prérequis : installer Node.js LTS, Android Studio et le SDK Android.
-1. Décompresse le projet dans un dossier simple, par exemple C:\LibertéAndroid.
-2. Ouvre un terminal (PowerShell) dans le dossier qui contient package.json.
-3. Exécute, une commande à la fois :
-   npm ci
-   npm run sync
-   npx cap open android
-4. Android Studio s’ouvre. Attends la fin de la synchronisation Gradle et accepte l’installation des composants SDK demandés.
-5. Pour créer l’APK : Build > Build Bundle(s) / APK(s) > Build APK(s).
-6. En cas de succès, Android Studio indique un lien « locate ». Le fichier se trouve généralement dans android/app/build/outputs/apk/debug/app-debug.apk.
+ANDROID STUDIO
+Prérequis : Node.js LTS, Android Studio et SDK Android. Dans le dossier contenant package.json, exécute npm ci puis npm run sync. Dans Android Studio, sélectionne la variante api23Debug pour tester, ou api23Release / api29Release après configuration locale des variables de signature.
+
+Le workflow exécute d’abord les tests JavaScript, synchronise Capacitor et signe les builds Release avec la même clé Android. Ne désinstalle pas une version déjà installée pour mettre à jour : il faut conserver la même clé de signature.
 
 POUR METTRE À JOUR LE CONTENU WEB PLUS TARD
 - Remplace les fichiers concernés dans www/.
@@ -63,7 +54,7 @@ Sauvegarde Android : sur Android 10 et versions suivantes, les exports sont cré
 NOUVEAUTÉS RITUELS ET SAUVEGARDE
 Les rituels se sélectionnent et se classent par moment dans Bibliothèque. Les groupes se replient une fois terminés. Si la biométrie est activée, elle est proposée d’abord à l’ouverture; le PIN de Liberté reste accessible comme secours. Sur Android 10+, les sauvegardes vont automatiquement dans Download/Backup.
 
-Pour GitHub Actions, copie GITHUB_WORKFLOW_A_COPIER/build-apk.yml vers .github/workflows/build-apk.yml à la racine du dépôt. Le dossier source android est inclus.
+Le workflow complet est déjà présent dans .github/workflows/android-release.yml; GITHUB_WORKFLOW_A_COPIER/build-apk.yml est une copie pour les dépôts existants. Le dossier source android est inclus.
 
 
 MISE À JOUR 1.6.1 — BIBLIOTHÈQUE AUDIO/VIDÉO
