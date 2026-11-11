@@ -10,5 +10,5 @@ test('Release has API 23 and API 29 signed variants plus a Debug APK', () => {
   assert.match(gradle, /api29[\s\S]*minSdkVersion 29/);
   assert.match(gradle, /signingConfig signingConfigs\.release/);
   assert.match(workflow, /assembleApi23Debug assembleApi23Release assembleApi29Release/);
-  for (const secret of ['ANDROID_RELEASE_KEY_BASE64','ANDROID_RELEASE_STORE_PASSWORD','ANDROID_RELEASE_KEY_ALIAS','ANDROID_RELEASE_KEY_PASSWORD']) assert(workflow.includes(secret), `Missing ${secret}`);
+  for (const secret of ['KEYSTORE_BASE64','KEYSTORE_PASSWORD','KEY_ALIAS','KEY_PASSWORD']) assert(workflow.includes(secret), `Missing ${secret}`);
 });
