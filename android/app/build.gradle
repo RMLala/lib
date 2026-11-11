@@ -7,8 +7,8 @@ android {
         applicationId "mg.libertelibre.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2026110501
-        versionName "1.6.5"
+        versionCode 2026111101
+        versionName "1.6.6"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +16,28 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    flavorDimensions += "minimumApi"
+    productFlavors {
+        api23 {
+            dimension "minimumApi"
+            minSdkVersion 23
+        }
+        api29 {
+            dimension "minimumApi"
+            minSdkVersion 29
+        }
+    }
+    signingConfigs {
+        release {
+            storeFile file(System.getenv('ANDROID_RELEASE_KEYSTORE_FILE') ?: 'release-key.jks')
+            storePassword System.getenv('ANDROID_RELEASE_STORE_PASSWORD') ?: ''
+            keyAlias System.getenv('ANDROID_RELEASE_KEY_ALIAS') ?: ''
+            keyPassword System.getenv('ANDROID_RELEASE_KEY_PASSWORD') ?: ''
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
