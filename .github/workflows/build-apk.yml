@@ -1,11 +1,7 @@
-name: Construire APK Android
+name: Legacy manual APK build (superseded)
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - master
 
 jobs:
   build:
