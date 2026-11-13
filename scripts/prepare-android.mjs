@@ -24,16 +24,17 @@ if (!source.includes('registerPlugin(DataExportPlugin.class)')) {
   writeFileSync(activity, source);
 }
 const res = resolve(root, 'android/app/src/main/res');
-for (const density of ['mdpi','hdpi','xhdpi','xxhdpi','xxxhdpi']) {
+const launcherIcons={mdpi:'ic_launcher_mdpi.png',hdpi:'ic_launcher_hdpi.png',xhdpi:'ic_launcher_xhdpi.png',xxhdpi:'ic_launcher_xxhdpi.png',xxxhdpi:'ic_launcher_xxxhdpi.png'};
+for (const [density,asset] of Object.entries(launcherIcons)) {
   const dir = resolve(res, 'mipmap-' + density); mkdirSync(dir, {recursive:true});
-  for (const name of ['ic_launcher','ic_launcher_round']) copyFileSync(resolve(root,'www/icon-512.png'), resolve(dir,name+'.png'));
+  for (const name of ['ic_launcher','ic_launcher_round']) copyFileSync(resolve(root,'www',asset), resolve(dir,name+'.png'));
 }
 mkdirSync(resolve(res,'drawable'),{recursive:true});
-copyFileSync(resolve(root,'www/icon-512.png'),resolve(res,'drawable/liberte_icon.png'));
+copyFileSync(resolve(root,'www/ic_launcher_foreground.png'),resolve(res,'drawable/liberte_icon.png'));
 writeFileSync(resolve(res,'drawable/liberte_foreground.xml'), `<?xml version="1.0" encoding="utf-8"?>
 <inset xmlns:android="http://schemas.android.com/apk/res/android" android:inset="0%"><bitmap android:src="@drawable/liberte_icon" android:gravity="fill" /></inset>`);
 mkdirSync(resolve(res,'values'),{recursive:true});
-writeFileSync(resolve(res,'values/liberte_colors.xml'), '<resources><color name="liberte_icon_background">#0B1B35</color></resources>');
+writeFileSync(resolve(res,'values/liberte_colors.xml'), '<resources><color name="liberte_icon_background">#153C31</color></resources>');
 mkdirSync(resolve(res,'mipmap-anydpi-v26'),{recursive:true});
 for (const name of ['ic_launcher','ic_launcher_round']) writeFileSync(resolve(res,'mipmap-anydpi-v26',name+'.xml'), `<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/liberte_icon_background"/><foreground android:drawable="@drawable/liberte_foreground"/></adaptive-icon>`);
@@ -46,10 +47,11 @@ if(!source.includes('registerPlugin(LibertyDevicePlugin.class)')){
  source=source.replace('super.onCreate(savedInstanceState);','registerPlugin(LibertyDevicePlugin.class);\n        super.onCreate(savedInstanceState);');
  writeFileSync(activity,source);
 }
+const appPackage=JSON.parse(readFileSync(resolve(root,'package.json'),'utf8'));
 const gradle=resolve(root,'android/app/build.gradle');
 let build=readFileSync(gradle,'utf8');
 if(!build.includes('androidx.biometric:biometric:'))build+='\ndependencies { implementation "androidx.biometric:biometric:1.1.0" }\n';
-build=build.replace(/versionCode\s+\d+/, 'versionCode 2026111101').replace(/versionName\s+"[^"]+"/, 'versionName "1.6.6"');
+build=build.replace(/versionCode\s+\d+/, `versionCode ${appPackage.androidVersionCode || 2026111301}`).replace(/versionName\s+"[^"]+"/, `versionName "${appPackage.version}"`);
 writeFileSync(gradle,build);
 const manifest=resolve(root,'android/app/src/main/AndroidManifest.xml');
 let xml=readFileSync(manifest,'utf8');
@@ -58,3 +60,4 @@ if(!xml.includes('android.permission.RECORD_AUDIO'))xml=xml.replace('</manifest>
 if(!xml.includes('android.permission.MODIFY_AUDIO_SETTINGS'))xml=xml.replace('</manifest>','<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n</manifest>');
 xml=xml.replace(/<queries>\s*<intent><action android:name="android.intent.action.TTS_SERVICE"\/>\s*<\/intent>\s*<\/queries>/,'');
 writeFileSync(manifest,xml);
+
