@@ -1,15 +1,14 @@
 name: Liberté — builds Android
 
 on:
-  workflow_dispatch:
+  pull_request:
+    branches: [main]
   push:
-    branches:
-      - 'codex/**'
-      - 'work/**'
-      - 'release/**'
-      - 'lib-liberte-premium-1.6.6'
-    tags:
-      - 'v*'
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -33,14 +32,35 @@ jobs:
         run: node --test tests/*.test.cjs
       - name: Synchroniser Android
         run: npm run sync
+      - name: Compiler Debug API 23 et API 29
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleApi23Debug assembleApi29Debug
+      - name: Publier APK Debug API 23
+        uses: actions/upload-artifact@v4
+        with:
+          name: liberte-debug-api23
+          path: android/app/build/outputs/apk/api23/debug/app-api23-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publier APK Debug API 29
+        uses: actions/upload-artifact@v4
+        with:
+          name: liberte-debug-api29
+          path: android/app/build/outputs/apk/api29/debug/app-api29-debug.apk
+          if-no-files-found: error
+          retention-days: 30
       - name: Préparer la clé Release commune
+        if: github.event_name != 'pull_request'
         env:
           KEY_BASE64: ${{ secrets.ANDROID_RELEASE_KEY_BASE64 }}
         run: |
           test -n "$KEY_BASE64" || (echo 'Secret ANDROID_RELEASE_KEY_BASE64 absent' && exit 1)
           echo "$KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/android-release.jks"
           echo "ANDROID_RELEASE_KEYSTORE_FILE=$RUNNER_TEMP/android-release.jks" >> "$GITHUB_ENV"
-      - name: Compiler Debug API 23 et Release API 23 / API 29 signés
+      - name: Compiler Release API 23 / API 29 signés
+        if: github.event_name != 'pull_request'
         env:
           ANDROID_RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_STORE_PASSWORD }}
           ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
@@ -51,15 +71,9 @@ jobs:
           test -n "$ANDROID_RELEASE_KEY_PASSWORD" || (echo 'Secret ANDROID_RELEASE_KEY_PASSWORD absent' && exit 1)
           cd android
           chmod +x gradlew
-          ./gradlew assembleApi23Debug assembleApi23Release assembleApi29Release
-      - name: Publier APK Debug API 23
-        uses: actions/upload-artifact@v4
-        with:
-          name: liberte-debug-api23
-          path: android/app/build/outputs/apk/api23/debug/app-api23-debug.apk
-          if-no-files-found: error
-          retention-days: 30
+          ./gradlew assembleApi23Release assembleApi29Release
       - name: Publier APK Release signée API 23
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: liberte-release-api23
@@ -67,6 +81,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
       - name: Publier APK Release signée API 29
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: liberte-release-api29
