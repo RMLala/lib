@@ -2,7 +2,10 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const html=fs.readFileSync(path.join(__dirname,'../www/index.html'),'utf8');
 const plugin=fs.readFileSync(path.join(__dirname,'../native/android/LibertyDevicePlugin.java'),'utf8');
 const manifest=fs.readFileSync(path.join(__dirname,'../android/app/src/main/AndroidManifest.xml'),'utf8');
-assert(!/speechSynthesis|SpeechSynthesisUtterance/.test(html),'System speech synthesis must be removed from the user interface.');
+assert(html.includes('data-system-voice-start'),'The full-screen reader must offer the optional system voice.');
+assert(html.includes('data-system-voice-pause')&&html.includes('data-system-voice-stop'),'System voice must expose pause/resume and stop controls.');
+assert(html.includes('data-ritual-teleprompter'),'Every ritual reader must offer the synchronized teleprompter.');
+assert(html.includes('onboundary=e=>')&&html.includes('Lecture en pause · reprise à la même position'),'The teleprompter must follow voice word boundaries and preserve the paused playback position.');
 for(const feature of ['data-record-voice','data-pick-media','data-media-loop','data-media-gain','data-media-seek'])assert(html.includes(feature),`Missing media feature: ${feature}`);
 assert(html.includes("indexedDB.open('liberte-private-audio-v1'"),'Voice recordings must be stored locally.');
 assert(html.includes('ACTION_OPEN_DOCUMENT')===false,'Picker implementation must remain in the Android native plugin.');
@@ -19,4 +22,4 @@ assert(html.includes('GUIDE_DATA.morning=readableGuides.morning.text')&&html.inc
 assert(plugin.includes('requestMicrophone'),'Android must request microphone access before recording.');
 assert(manifest.includes('android.permission.RECORD_AUDIO'),'Android manifest must declare microphone access.');
 assert(!html.includes('FileReader.readAsDataURL'),'Selected media must not be embedded into the app data.');
-console.log('PASS: separate audio/video Library resources, unique local voice recordings, direct URI playback, single permission path, and no system TTS.');
+console.log('PASS: separate audio/video Library resources, unique local voice recordings, direct URI playback, single permission path, and synchronized optional system voice in the ritual reader.');
