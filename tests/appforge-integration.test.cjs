@@ -22,7 +22,8 @@ test('License client uses AppForge public routes and preserves a signed offline 
   assert.match(html,/\/v1\/trial/);
   assert.match(html,/\/v1\/activate/);
   assert.match(html,/\/v1\/status/);
-  assert.match(html,/LIBERTE-V1/);
+  assert.match(html,/const PRODUCT_ID='LIBERTE'/);
+  assert.ok(html.includes("![PRODUCT_ID,'LIBERTE-V1'].includes(claims.app)"));
   assert.match(html,/crypto\.subtle\.verify/);
 });
 

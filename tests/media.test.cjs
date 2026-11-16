@@ -6,6 +6,9 @@ assert(html.includes('data-system-voice-start'),'The full-screen reader must off
 assert(html.includes('data-system-voice-pause')&&html.includes('data-system-voice-stop'),'System voice must expose pause/resume and stop controls.');
 assert(html.includes('data-ritual-teleprompter'),'Every ritual reader must offer the synchronized teleprompter.');
 assert(html.includes('onboundary=e=>')&&html.includes('Lecture en pause · reprise à la même position'),'The teleprompter must follow voice word boundaries and preserve the paused playback position.');
+assert(html.includes('data-record-pause')&&html.includes('MediaRecorder')&&html.includes('r.pause()')&&html.includes('r.resume()'),'Voice recording must support pause and resume.');
+assert(html.includes('Lecture en pause. Appuie sur Reprendre')&&html.includes('Lecture reprise.')&&html.includes('updateMediaPlaybackButton'),'Media playback must support pause/resume and synchronize its control state.');
+assert(html.includes("const PRODUCT_ID='LIBERTE';")&&html.includes("'LIBERTE-V1'"),'New licenses must use LIBERTE while validating already issued LIBERTE-V1 proofs.');
 for(const feature of ['data-record-voice','data-pick-media','data-media-loop','data-media-gain','data-media-seek'])assert(html.includes(feature),`Missing media feature: ${feature}`);
 assert(html.includes("indexedDB.open('liberte-private-audio-v1'"),'Voice recordings must be stored locally.');
 assert(html.includes('ACTION_OPEN_DOCUMENT')===false,'Picker implementation must remain in the Android native plugin.');
