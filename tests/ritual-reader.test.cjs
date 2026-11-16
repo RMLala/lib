@@ -22,5 +22,5 @@ test('Collapse controls are compact plus/minus buttons and navigation labels are
 });
 test('Release version remains API 23/API 29 and advances monotonically',()=>{
   assert.match(gradle,/versionName "1\.6\.11"/);
-  assert.match(gradle,/versionCode 2026111603/);
+  assert.match(gradle,/versionCode 2026111606/);
 });
