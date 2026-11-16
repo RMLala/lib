@@ -34,7 +34,7 @@ copyFileSync(resolve(root,'www/ic_launcher_foreground.png'),resolve(res,'drawabl
 writeFileSync(resolve(res,'drawable/liberte_foreground.xml'), `<?xml version="1.0" encoding="utf-8"?>
 <inset xmlns:android="http://schemas.android.com/apk/res/android" android:inset="0%"><bitmap android:src="@drawable/liberte_icon" android:gravity="fill" /></inset>`);
 mkdirSync(resolve(res,'values'),{recursive:true});
-writeFileSync(resolve(res,'values/liberte_colors.xml'), '<resources><color name="liberte_icon_background">#153C31</color></resources>');
+writeFileSync(resolve(res,'values/liberte_colors.xml'), '<resources><color name="liberte_icon_background">#24043F</color></resources>');
 mkdirSync(resolve(res,'mipmap-anydpi-v26'),{recursive:true});
 for (const name of ['ic_launcher','ic_launcher_round']) writeFileSync(resolve(res,'mipmap-anydpi-v26',name+'.xml'), `<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/liberte_icon_background"/><foreground android:drawable="@drawable/liberte_foreground"/></adaptive-icon>`);
@@ -59,5 +59,9 @@ if(!xml.includes('android.permission.USE_BIOMETRIC'))xml=xml.replace('</manifest
 if(!xml.includes('android.permission.RECORD_AUDIO'))xml=xml.replace('</manifest>','<uses-permission android:name="android.permission.RECORD_AUDIO"/>\n</manifest>');
 if(!xml.includes('android.permission.MODIFY_AUDIO_SETTINGS'))xml=xml.replace('</manifest>','<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n</manifest>');
 xml=xml.replace(/<queries>\s*<intent><action android:name="android.intent.action.TTS_SERVICE"\/>\s*<\/intent>\s*<\/queries>/,'');
+if(!xml.includes('android.intent.action.TTS_SERVICE'))xml=xml.replace('</manifest>','<queries><intent><action android:name="android.intent.action.TTS_SERVICE"/></intent></queries>\n</manifest>');
 writeFileSync(manifest,xml);
+copyFileSync(resolve(root,'native/android/LibertySpeechPlugin.java'),resolve(java,'LibertySpeechPlugin.java'));
+source=readFileSync(activity,'utf8');
+if(!source.includes('registerPlugin(LibertySpeechPlugin.class)'))writeFileSync(activity,source.replace('super.onCreate(savedInstanceState);','registerPlugin(LibertySpeechPlugin.class);\n        super.onCreate(savedInstanceState);'));
 
