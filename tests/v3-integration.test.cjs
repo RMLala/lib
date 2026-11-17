@@ -6,7 +6,7 @@ const root = path.resolve(__dirname,'..');
 const read = p => fs.readFileSync(path.join(root,p),'utf8');
 
 test('Liberté V3: all three published HTML variants contain the actual app and support', () => {
-  const paths=['Liberte_Premium_1.6.17.html','www/index.html','android/app/src/main/assets/public/index.html'];
+  const paths=['Liberte_Premium_1.6.18.html','www/index.html','android/app/src/main/assets/public/index.html'];
   for(const p of paths){
     const html=read(p);
     assert.ok(html.length>10000,`${p}: application HTML missing or truncated`);
@@ -35,7 +35,9 @@ test('Liberté Cloud sync requires an active paid license and keeps account asso
   const html=read('www/index.html');
   assert.match(html,/paidLicenseActive=kind==='license'/);
   assert.match(html,/disabled=!paidLicenseActive\|\|!cloudToken/);
-  assert.match(html,/cloudCard\.hidden=!paidLicenseActive/);
+  assert.match(html,/cloudPanel\.hidden=!paidLicenseActive/);
+  assert.match(html,/id="appforgeCloudSettings" hidden/);
+  assert.match(html,/card\.id='appforgeIntegrationSettings'/);
   assert.match(html,/connexion AppForge est nécessaire pour associer le compte et l’organisation/);
 });
 test('Android Drive backup uses native sharing and file selection, without OAuth',()=>{
@@ -53,7 +55,7 @@ test('Android Drive backup uses native sharing and file selection, without OAuth
 });
 test('Liberté V3: version and Android build variants are configured',()=>{
   const pkg=JSON.parse(read('package.json'));
-  assert.equal(pkg.version,'1.6.17');
+  assert.equal(pkg.version,'1.6.18');
   const workflow=read('.github/workflows/android-release.yml');
   for(const variant of ['assembleApi23Debug','assembleApi29Debug','assembleApi23Release','assembleApi29Release'])assert.ok(workflow.includes(variant),`missing ${variant}`);
 });
