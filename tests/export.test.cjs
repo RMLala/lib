@@ -2,8 +2,10 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
+const {webcrypto}=require('node:crypto');
+const {TextEncoder,TextDecoder}=require('node:util');
 const html=fs.readFileSync(__dirname+'/../www/index.html','utf8');
-const code=html.slice(html.indexOf('let exportInProgress=false;'),html.indexOf('function exportJSON'));
+const code=html.slice(html.indexOf('let exportInProgress=false;'),html.indexOf('async function exportJSON'));
 function setup(cap){
  const buttons=Array.from({length:3},()=>({disabled:false}));let clicked=0;const messages=[];const errors=[];const calls=[];
  const context={window:{Capacitor:cap},document:{getElementById:id=>buttons[['exportData','backupBtn','exportCsv'].indexOf(id)],createElement:()=>({click(){clicked++},remove(){}}),body:{appendChild(){}}},Blob,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL:u=>calls.push(u)},setTimeout:fn=>calls.push(fn),toast:s=>messages.push(s),alert:s=>errors.push(s),console:{error(){}}};
@@ -15,3 +17,18 @@ test('Cancel and failure release export buttons',async()=>{const s=setup({getPla
 test('Concurrent taps blocked and CSV MIME normalized',async()=>{let finish;let n=0;const s=setup({getPlatform:()=> 'android',nativePromise:(p,m,args)=>{n++;assert.equal(args.mimeType,'text/csv');return new Promise(r=>finish=r)}});const pending=s.context.download('x.csv','\ufeffDate;Note','text/csv;charset=utf-8');await s.context.download('x','y');assert.equal(n,1);assert.ok(s.buttons.every(b=>b.disabled));finish({cancelled:false});await pending;});
 test('Browser download and deferred URL cleanup',async()=>{const s=setup();await s.context.download('x.json','{}');assert.equal(s.clicked(),1);assert.equal(s.calls.length,1);s.calls[0]();assert.equal(s.calls[1],'blob:test');});
 for(const [i,match] of [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].entries())test('Script syntax '+i,()=>new vm.Script(match[1]));
+
+test('Optional backup encryption round-trips with AES-256-GCM and rejects a wrong password',async()=>{
+ const start=html.indexOf('const BACKUP_ENCRYPTED_FORMAT='),end=html.indexOf('async function shareBackup()',start);
+ assert(start>=0&&end>start,'backup crypto functions are present');
+ const fields={backupEncrypt:{checked:false},backupPassword:{value:''}};
+ const context={crypto:webcrypto,TextEncoder,TextDecoder,state:{settings:{theme:'ocean'},days:{'2026-11-17':{smokes:2}}},document:{getElementById:id=>fields[id]},prompt:()=> 'CorrectHorseBattery'};
+ context.btoa=value=>Buffer.from(value,'binary').toString('base64');context.atob=value=>Buffer.from(value,'base64').toString('binary');
+ vm.createContext(context);vm.runInContext(html.slice(start,end),context);
+ const plain=await context.backupContents();assert.deepEqual(JSON.parse(plain),context.state);
+ fields.backupEncrypt.checked=true;fields.backupPassword.value='CorrectHorseBattery';
+ const encoded=await context.backupContents(),container=JSON.parse(encoded);
+ assert.equal(container.format,'liberte-encrypted-backup-v1');assert.equal(container.cipher,'AES-256-GCM');
+ const restored=await context.decodeBackup(encoded);assert.equal(JSON.stringify(restored),JSON.stringify(context.state));
+ context.prompt=()=> 'WrongPassword';await assert.rejects(()=>context.decodeBackup(encoded),/Mot de passe incorrect/);
+});

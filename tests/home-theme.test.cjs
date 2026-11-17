@@ -13,13 +13,18 @@ test('Home card and text follow the selected palette and explicit custom color',
   }});
   try{
     const {document:d}=dom.window,hero=d.querySelector('#home .hero');
+    const asRgb=hex=>`rgb(${hex.match(/[0-9a-f]{2}/ig).map(part=>parseInt(part,16)).join(', ')})`;
+    assert.equal(d.getElementById('identityBackgroundImage').style.objectFit,'cover');
     const first=hero.style.getPropertyValue('--home-bg');
     d.querySelector('[data-select-theme="lavande"]').click();
     const themed=hero.style.getPropertyValue('--home-bg');
     assert.notEqual(themed,first,'theme selection must change the home-card background');
+    assert.equal(hero.style.backgroundColor,asRgb(themed),'theme must replace the baked-in green gradient');
     assert.equal(hero.querySelector('.identity-copy h2').style.getPropertyPriority('color'),'important');
+    assert.equal(hero.querySelector('.identity-copy .eyebrow').style.getPropertyPriority('color'),'important');
     d.querySelector('[data-home-bg="#3b145b"]').click();
     assert.equal(hero.style.getPropertyValue('--home-bg'),'#3b145b','custom home color remains an override');
+    assert.equal(hero.style.backgroundColor,asRgb('#3b145b'),'custom color fills the whole home card');
     assert.equal(d.getElementById('homeBackgroundColor').value,'#3b145b');
     assert.deepEqual(errors,[]);
   }finally{dom.window.close()}

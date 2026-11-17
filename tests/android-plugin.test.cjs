@@ -7,6 +7,8 @@ const root = path.resolve(__dirname, '..');
 const nativePlugin = fs.readFileSync(path.join(root, 'native/android/LibertyDevicePlugin.java'), 'utf8');
 const generatedPlugin = fs.readFileSync(path.join(root, 'android/app/src/main/java/mg/libertelibre/app/LibertyDevicePlugin.java'), 'utf8');
 const prepareAndroid = fs.readFileSync(path.join(root, 'scripts/prepare-android.mjs'), 'utf8');
+const nativeExport = fs.readFileSync(path.join(root, 'native/android/DataExportPlugin.java'), 'utf8');
+const generatedExport = fs.readFileSync(path.join(root, 'android/app/src/main/java/mg/libertelibre/app/DataExportPlugin.java'), 'utf8');
 
 test('Android microphone permission state uses the Capacitor API import', () => {
   assert.match(nativePlugin, /^import com\.getcapacitor\.PermissionState;$/m);
@@ -35,4 +37,13 @@ test('Android plugin exposes native print-to-PDF bridge', () => {
   assert.match(nativePlugin, /PrintManager/);
   assert.match(nativePlugin, /createPrintDocumentAdapter/);
   assert.match(generatedPlugin, /void printHtml\(PluginCall call\)/);
+});
+
+test('Android backup plugin shares JSON and restores it through the document picker',()=>{
+  assert.equal(generatedExport,nativeExport);
+  assert.match(prepareAndroid,/native\/android\/DataExportPlugin\.java/);
+  assert.match(nativeExport,/Intent\.ACTION_SEND/);
+  assert.match(nativeExport,/FileProvider\.getUriForFile/);
+  assert.match(nativeExport,/Intent\.ACTION_OPEN_DOCUMENT/);
+  assert.match(nativeExport,/MAX_BACKUP_BYTES/);
 });
