@@ -3562,4 +3562,27 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 checkLicense();
 })();</script>
 <!-- LIBERTE_V168_PATCH_END -->
-</body></html>
+<script id="appforge-support-v3">
+(()=>{'use strict';
+const mount=()=>{
+ const settings=document.getElementById('settings');
+ if(!settings||document.getElementById('appforgeAboutSupport'))return;
+ const card=document.createElement('section');card.className='card';card.id='appforgeAboutSupport';
+ const title=document.createElement('h3');title.textContent='À propos & Support';card.append(title);
+ const info=document.createElement('p');info.className='muted';info.textContent='Liberté Premium · AppForge Studio · Made in Madagascar · Version 1.6.14 · Mise à jour du 17 novembre 2026';card.append(info);
+ const license=document.createElement('p');license.className='muted';license.id='appforgeAboutLicense';card.append(license);
+ const cloud=document.createElement('p');cloud.className='muted';cloud.id='appforgeAboutCloud';card.append(cloud);
+ const actions=document.createElement('div');actions.className='af-integration-actions';
+ const contact=document.createElement('a');contact.className='btn secondary';contact.href='mailto:lalainaadclick@gmail.com?subject=Support%20Libert%C3%A9';contact.textContent='Contacter le support';actions.append(contact);card.append(actions);
+ const refresh=()=>{
+  const l=document.getElementById('afLicenseStatus'),c=document.getElementById('afCloudStatus');
+  license.textContent='Licence : '+((l&&l.textContent.trim())||'statut non disponible');
+  cloud.textContent='Cloud : '+((c&&c.textContent.trim())||'statut non disponible');
+ };
+ settings.append(card);refresh();
+ for(const target of [document.getElementById('afLicenseStatus'),document.getElementById('afCloudStatus')])
+  if(target)new MutationObserver(refresh).observe(target,{childList:true,subtree:true,characterData:true});
+};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
+})();
+</script></body></html>

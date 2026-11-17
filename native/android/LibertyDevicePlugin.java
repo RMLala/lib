@@ -167,7 +167,7 @@ public class LibertyDevicePlugin extends Plugin {
         if (activity == null) { call.reject("Activité Android indisponible."); return; }
         activity.runOnUiThread(() -> {
             if (authenticating) { call.reject("Authentification déjà en cours."); return; }
-            int allowed = BiometricManager.Authenticators.BIOMETRIC_WEAK | BiometricManager.Authenticators.DEVICE_CREDENTIAL;
+            int allowed = BiometricManager.Authenticators.BIOMETRIC_WEAK;
             if (BiometricManager.from(getContext()).canAuthenticate(allowed) != BiometricManager.BIOMETRIC_SUCCESS) {
                 call.reject("Configure une empreinte, un visage ou un PIN de verrouillage dans les paramètres Android."); return;
             }
@@ -180,7 +180,7 @@ public class LibertyDevicePlugin extends Plugin {
             try {
                 prompt.authenticate(new BiometricPrompt.PromptInfo.Builder()
                     .setTitle(malagasy ? "Sokafy ny Liberté" : "Déverrouiller Liberté")
-                    .setSubtitle(malagasy ? "Biometrika na kaody hidin’ny telefaonina" : "Biométrie ou code de verrouillage du téléphone")
+                    .setSubtitle(malagasy ? "Hamafiso ny biometrika" : "Confirmez votre biométrie")
                     .setAllowedAuthenticators(allowed).build());
             } catch (Exception e) { authenticating = false; call.reject("Authentification indisponible.", e); }
         });
