@@ -47,3 +47,18 @@ test('Android backup plugin shares JSON and restores it through the document pic
   assert.match(nativeExport,/Intent\.ACTION_OPEN_DOCUMENT/);
   assert.match(nativeExport,/MAX_BACKUP_BYTES/);
 });
+
+test('Background audio playback is wired to a foreground service for screen lock',()=>{
+ const nativeAudio=fs.readFileSync(path.join(root,'native/android/LibertyBackgroundAudioPlugin.java'),'utf8');
+ const generatedAudio=fs.readFileSync(path.join(root,'android/app/src/main/java/mg/libertelibre/app/LibertyBackgroundAudioPlugin.java'),'utf8');
+ const service=fs.readFileSync(path.join(root,'native/android/LibertyAudioService.java'),'utf8');
+ const generatedService=fs.readFileSync(path.join(root,'android/app/src/main/java/mg/libertelibre/app/LibertyAudioService.java'),'utf8');
+ const activity=fs.readFileSync(path.join(root,'android/app/src/main/java/mg/libertelibre/app/MainActivity.java'),'utf8');
+ const manifest=fs.readFileSync(path.join(root,'android/app/src/main/AndroidManifest.xml'),'utf8');
+ assert.equal(generatedAudio,nativeAudio);assert.equal(generatedService,service);
+ assert.match(prepareAndroid,/LibertyBackgroundAudioPlugin\.java/);assert.match(prepareAndroid,/LibertyAudioService\.java/);
+ assert.match(activity,/registerPlugin\(LibertyBackgroundAudioPlugin\.class\)/);
+ assert.match(manifest,/FOREGROUND_SERVICE_MEDIA_PLAYBACK/);assert.match(manifest,/foregroundServiceType="mediaPlayback"/);
+ assert.match(service,/ACTION_PAUSE/);assert.match(service,/ACTION_RESUME/);assert.match(service,/PARTIAL_WAKE_LOCK/);
+ assert.match(nativeAudio,/Base64\.decode/);
+});

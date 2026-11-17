@@ -8,6 +8,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(DataExportPlugin.class);
         registerPlugin(LibertyDevicePlugin.class);
         registerPlugin(LibertySpeechPlugin.class);
+        registerPlugin(LibertyBackgroundAudioPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

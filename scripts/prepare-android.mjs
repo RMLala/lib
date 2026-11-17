@@ -58,10 +58,17 @@ let xml=readFileSync(manifest,'utf8');
 if(!xml.includes('android.permission.USE_BIOMETRIC'))xml=xml.replace('</manifest>','<uses-permission android:name="android.permission.USE_BIOMETRIC"/>\n</manifest>');
 if(!xml.includes('android.permission.RECORD_AUDIO'))xml=xml.replace('</manifest>','<uses-permission android:name="android.permission.RECORD_AUDIO"/>\n</manifest>');
 if(!xml.includes('android.permission.MODIFY_AUDIO_SETTINGS'))xml=xml.replace('</manifest>','<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n</manifest>');
+if(!xml.includes('android.permission.FOREGROUND_SERVICE'))xml=xml.replace('</manifest>','<uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>\n</manifest>');
+if(!xml.includes('android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK'))xml=xml.replace('</manifest>','<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>\n</manifest>');
+if(!xml.includes('LibertyAudioService'))xml=xml.replace('</application>','<service android:name=".LibertyAudioService" android:exported="false" android:foregroundServiceType="mediaPlayback"/>\n    </application>');
 xml=xml.replace(/<queries>\s*<intent><action android:name="android.intent.action.TTS_SERVICE"\/>\s*<\/intent>\s*<\/queries>/,'');
 if(!xml.includes('android.intent.action.TTS_SERVICE'))xml=xml.replace('</manifest>','<queries><intent><action android:name="android.intent.action.TTS_SERVICE"/></intent></queries>\n</manifest>');
 writeFileSync(manifest,xml);
 copyFileSync(resolve(root,'native/android/LibertySpeechPlugin.java'),resolve(java,'LibertySpeechPlugin.java'));
+copyFileSync(resolve(root,'native/android/LibertyBackgroundAudioPlugin.java'),resolve(java,'LibertyBackgroundAudioPlugin.java'));
+copyFileSync(resolve(root,'native/android/LibertyAudioService.java'),resolve(java,'LibertyAudioService.java'));
 source=readFileSync(activity,'utf8');
-if(!source.includes('registerPlugin(LibertySpeechPlugin.class)'))writeFileSync(activity,source.replace('super.onCreate(savedInstanceState);','registerPlugin(LibertySpeechPlugin.class);\n        super.onCreate(savedInstanceState);'));
+if(!source.includes('registerPlugin(LibertySpeechPlugin.class)'))source=source.replace('super.onCreate(savedInstanceState);','registerPlugin(LibertySpeechPlugin.class);\n        super.onCreate(savedInstanceState);');
+if(!source.includes('registerPlugin(LibertyBackgroundAudioPlugin.class)'))source=source.replace('super.onCreate(savedInstanceState);','registerPlugin(LibertyBackgroundAudioPlugin.class);\n        super.onCreate(savedInstanceState);');
+writeFileSync(activity,source);
 
