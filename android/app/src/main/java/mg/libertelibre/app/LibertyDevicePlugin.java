@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
+import androidx.fragment.app.FragmentActivity;
 import androidx.core.content.ContextCompat;
 import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSObject;
@@ -123,16 +124,58 @@ public class LibertyDevicePlugin extends Plugin {
         });
     }
 
+    // V3: expose biometric availability separately from Android device credential.
+    // The web layer can prioritize biometrics and retain its existing app-PIN fallback.
     @PluginMethod
-    public void authenticate(PluginCall call) {
-        getActivity().runOnUiThread(() -> {
+    public void biometricAvailability(PluginCall call) {
+        JSObject result = new JSObject();
+        int status = BiometricManager.from(getContext()).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK);
+        result.put("available", status == BiometricManager.BIOMETRIC_SUCCESS);
+        result.put("status", status);
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void authenticateBiometric(PluginCall call) {
+        Activity activity = getActivity();
+        if (!(activity instanceof FragmentActivity)) { call.reject("Activité Android indisponible."); return; }
+        FragmentActivity fragmentActivity = (FragmentActivity) activity;
+        activity.runOnUiThread(() -> {
             if (authenticating) { call.reject("Authentification déjà en cours."); return; }
-            int allowed = BiometricManager.Authenticators.BIOMETRIC_WEAK | BiometricManager.Authenticators.DEVICE_CREDENTIAL;
-            if (BiometricManager.from(getContext()).canAuthenticate(allowed) != BiometricManager.BIOMETRIC_SUCCESS) {
-                call.reject("Configure une empreinte, un visage ou un PIN de verrouillage dans les paramètres Android."); return;
+            if (BiometricManager.from(getContext()).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_SUCCESS) {
+                call.reject("Biométrie indisponible : utilisez le PIN de Liberté."); return;
             }
             authenticating = true;
-            BiometricPrompt prompt = new BiometricPrompt(getActivity(), ContextCompat.getMainExecutor(getContext()), new BiometricPrompt.AuthenticationCallback() {
+            try {
+                BiometricPrompt prompt = new BiometricPrompt(fragmentActivity, ContextCompat.getMainExecutor(getContext()), new BiometricPrompt.AuthenticationCallback() {
+                    @Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) { authenticating = false; call.resolve(); }
+                    @Override public void onAuthenticationError(int code, CharSequence message) { authenticating = false; call.reject(message.toString()); }
+                    @Override public void onAuthenticationFailed() { /* Let Android handle retries and lockout. */ }
+                });
+                boolean malagasy = "mg".equals(call.getString("language", "fr"));
+                prompt.authenticate(new BiometricPrompt.PromptInfo.Builder()
+                    .setTitle(malagasy ? "Sokafy ny Liberté" : "Déverrouiller Liberté")
+                    .setSubtitle(malagasy ? "Biometrika aloha; kaody PIN raha ilaina" : "Biométrie prioritaire ; PIN Liberté en secours")
+                    .setNegativeButtonText(malagasy ? "Ampiasao PIN" : "Utiliser le PIN")
+                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK)
+                    .build());
+            } catch (Exception e) { authenticating = false; call.reject("Authentification biométrique indisponible.", e); }
+        });
+    }
+
+    @PluginMethod
+    public void authenticate(PluginCall call) {
+        Activity activity = getActivity();
+        if (!(activity instanceof FragmentActivity)) { call.reject("Activité Android indisponible."); return; }
+        FragmentActivity fragmentActivity = (FragmentActivity) activity;
+        activity.runOnUiThread(() -> {
+            if (authenticating) { call.reject("Authentification déjà en cours."); return; }
+            int allowed = BiometricManager.Authenticators.BIOMETRIC_WEAK;
+            if (BiometricManager.from(getContext()).canAuthenticate(allowed) != BiometricManager.BIOMETRIC_SUCCESS) {
+                call.reject("Configure une biométrie dans les paramètres Android ; le PIN de Liberté reste le secours."); return;
+            }
+            authenticating = true;
+            BiometricPrompt prompt = new BiometricPrompt(fragmentActivity, ContextCompat.getMainExecutor(getContext()), new BiometricPrompt.AuthenticationCallback() {
                 @Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) { authenticating = false; call.resolve(); }
                 @Override public void onAuthenticationError(int code, CharSequence message) { authenticating = false; call.reject(message.toString()); }
             });
@@ -140,7 +183,7 @@ public class LibertyDevicePlugin extends Plugin {
             try {
                 prompt.authenticate(new BiometricPrompt.PromptInfo.Builder()
                     .setTitle(malagasy ? "Sokafy ny Liberté" : "Déverrouiller Liberté")
-                    .setSubtitle(malagasy ? "Biometrika na kaody hidin’ny telefaonina" : "Biométrie ou code de verrouillage du téléphone")
+                    .setSubtitle(malagasy ? "Hamafiso ny biometrika" : "Confirmez votre biométrie")
                     .setAllowedAuthenticators(allowed).build());
             } catch (Exception e) { authenticating = false; call.reject("Authentification indisponible.", e); }
         });
