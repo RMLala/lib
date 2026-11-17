@@ -137,54 +137,47 @@ public class LibertyDevicePlugin extends Plugin {
 
     @PluginMethod
     public void authenticateBiometric(PluginCall call) {
-        Activity activity = getActivity();
-        if (!(activity instanceof FragmentActivity)) { call.reject("Activité Android indisponible."); return; }
-        FragmentActivity fragmentActivity = (FragmentActivity) activity;
-        activity.runOnUiThread(() -> {
-            if (authenticating) { call.reject("Authentification déjà en cours."); return; }
-            if (BiometricManager.from(getContext()).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_SUCCESS) {
-                call.reject("Biométrie indisponible : utilisez le PIN de Liberté."); return;
-            }
-            authenticating = true;
-            try {
-                BiometricPrompt prompt = new BiometricPrompt(fragmentActivity, ContextCompat.getMainExecutor(getContext()), new BiometricPrompt.AuthenticationCallback() {
-                    @Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) { authenticating = false; call.resolve(); }
-                    @Override public void onAuthenticationError(int code, CharSequence message) { authenticating = false; call.reject(message.toString()); }
-                    @Override public void onAuthenticationFailed() { /* Let Android handle retries and lockout. */ }
-                });
-                boolean malagasy = "mg".equals(call.getString("language", "fr"));
-                prompt.authenticate(new BiometricPrompt.PromptInfo.Builder()
-                    .setTitle(malagasy ? "Sokafy ny Liberté" : "Déverrouiller Liberté")
-                    .setSubtitle(malagasy ? "Biometrika aloha; kaody PIN raha ilaina" : "Biométrie prioritaire ; PIN Liberté en secours")
-                    .setNegativeButtonText(malagasy ? "Ampiasao PIN" : "Utiliser le PIN")
-                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK)
-                    .build());
-            } catch (Exception e) { authenticating = false; call.reject("Authentification biométrique indisponible.", e); }
-        });
+        startBiometricAuthentication(call, true);
     }
 
     @PluginMethod
     public void authenticate(PluginCall call) {
+        // Backward compatibility for installed WebViews still calling the original method.
+        startBiometricAuthentication(call, false);
+    }
+
+    private void startBiometricAuthentication(PluginCall call, boolean allowPinButton) {
         Activity activity = getActivity();
-        if (!(activity instanceof FragmentActivity)) { call.reject("Activité Android indisponible."); return; }
+        if (!(activity instanceof FragmentActivity) || activity.isFinishing() || activity.isDestroyed()) {
+            call.reject("Activité Android indisponible. Utilisez le PIN de Liberté.");
+            return;
+        }
         FragmentActivity fragmentActivity = (FragmentActivity) activity;
         activity.runOnUiThread(() -> {
             if (authenticating) { call.reject("Authentification déjà en cours."); return; }
+            if (fragmentActivity.isFinishing() || fragmentActivity.isDestroyed()
+                    || !fragmentActivity.getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) {
+                call.reject("Application en arrière-plan. Utilisez le PIN de Liberté.");
+                return;
+            }
             int allowed = BiometricManager.Authenticators.BIOMETRIC_WEAK;
-            if (BiometricManager.from(getContext()).canAuthenticate(allowed) != BiometricManager.BIOMETRIC_SUCCESS) {
+            if (BiometricManager.from(fragmentActivity).canAuthenticate(allowed) != BiometricManager.BIOMETRIC_SUCCESS) {
                 call.reject("Configure une biométrie dans les paramètres Android ; le PIN de Liberté reste le secours."); return;
             }
             authenticating = true;
-            BiometricPrompt prompt = new BiometricPrompt(fragmentActivity, ContextCompat.getMainExecutor(getContext()), new BiometricPrompt.AuthenticationCallback() {
-                @Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) { authenticating = false; call.resolve(); }
-                @Override public void onAuthenticationError(int code, CharSequence message) { authenticating = false; call.reject(message.toString()); }
-            });
             boolean malagasy = "mg".equals(call.getString("language", "fr"));
             try {
-                prompt.authenticate(new BiometricPrompt.PromptInfo.Builder()
+                BiometricPrompt prompt = new BiometricPrompt(fragmentActivity, ContextCompat.getMainExecutor(fragmentActivity), new BiometricPrompt.AuthenticationCallback() {
+                    @Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) { authenticating = false; call.resolve(); }
+                    @Override public void onAuthenticationError(int code, CharSequence message) { authenticating = false; call.reject(message == null ? "Authentification annulée." : message.toString()); }
+                    @Override public void onAuthenticationFailed() { /* Android keeps the prompt open for another attempt. */ }
+                });
+                BiometricPrompt.PromptInfo.Builder promptInfo = new BiometricPrompt.PromptInfo.Builder()
                     .setTitle(malagasy ? "Sokafy ny Liberté" : "Déverrouiller Liberté")
-                    .setSubtitle(malagasy ? "Hamafiso ny biometrika" : "Confirmez votre biométrie")
-                    .setAllowedAuthenticators(allowed).build());
+                    .setSubtitle(malagasy ? "Hamafiso ny biometrika" : "Biométrie prioritaire ; PIN Liberté en secours")
+                    .setAllowedAuthenticators(allowed);
+                if (allowPinButton) promptInfo.setNegativeButtonText(malagasy ? "Ampiasao PIN" : "Utiliser le PIN");
+                prompt.authenticate(promptInfo.build());
             } catch (Exception e) { authenticating = false; call.reject("Authentification indisponible.", e); }
         });
     }
