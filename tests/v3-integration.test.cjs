@@ -6,7 +6,7 @@ const root = path.resolve(__dirname,'..');
 const read = p => fs.readFileSync(path.join(root,p),'utf8');
 
 test('Liberté V3: all three published HTML variants contain the actual app and support', () => {
-  const paths=['Liberte_Premium_1.6.21.html','www/index.html','android/app/src/main/assets/public/index.html'];
+  const paths=['Liberte_Premium_1.6.22.html','www/index.html','android/app/src/main/assets/public/index.html'];
   for(const p of paths){
     const html=read(p);
     assert.ok(html.length>10000,`${p}: application HTML missing or truncated`);
@@ -33,7 +33,7 @@ test('Liberté V3: native biometric methods and PIN fallback semantics remain pr
 });
 test('Liberté Cloud sync uses a license token without client account fields',()=>{
   const html=read('www/index.html');
-  assert.match(html,/paidLicenseActive=kind==='license'/);
+  assert.match(html,/licenseAccessActive=true/);
   assert.match(html,/\/v1\/cloud\/token/);
   assert.match(html,/\/v1\/cloud\/snapshot/);
   assert.match(html,/cloudTokenExpiresAt/);
@@ -56,7 +56,7 @@ test('Android Drive backup uses native sharing and file selection, without OAuth
 });
 test('Liberté V3: version and Android build variants are configured',()=>{
   const pkg=JSON.parse(read('package.json'));
-  assert.equal(pkg.version,'1.6.21');
+  assert.equal(pkg.version,'1.6.22');
   const workflow=read('.github/workflows/android-release.yml');
   for(const variant of ['assembleApi23Debug','assembleApi29Debug','assembleApi23Release','assembleApi29Release'])assert.ok(workflow.includes(variant),`missing ${variant}`);
 });
