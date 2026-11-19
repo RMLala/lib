@@ -21,7 +21,7 @@ test('Gemini accepts one session-only API key and calls the current Flash model 
 });
 
 test('License client uses AppForge public routes and preserves a signed offline proof',()=>{
-  assert.match(html,/appforge-license-api\.appforge-licences-mg\.workers\.dev/);
+  assert.match(html,/appforge-license-api\.lalainaadclick\.workers\.dev/);
   assert.match(html,/\/v1\/trial/);
   assert.match(html,/\/v1\/activate/);
   assert.match(html,/\/v1\/status/);
@@ -34,17 +34,19 @@ test('License client uses AppForge public routes and preserves a signed offline 
   assert.match(html,/lifetime/);
   assert.match(html,/afLicensePurchase/);
   assert.match(html,/afLicensePlanGate/);
-  assert.match(html,/appforge-license-api\.appforge-licences-mg\.workers\.dev/);
+  assert.match(html,/appforge-license-api\.lalainaadclick\.workers\.dev/);
 });
 
 test('Cloud sync is licensed automatically without client account credentials',()=>{
+  assert.match(html,/LICENSE_API='https:\/\/appforge-license-api\.lalainaadclick\.workers\.dev'/);
+  assert.match(html,/CLOUD_RESOURCE='default'/);
   assert.match(html,/\/v1\/cloud\/token/);
   assert.match(html,/\/v1\/cloud\/snapshot/);
   assert.match(html,/expectedRevision:cloudRevision/);
   assert.match(html,/cloudTokenExpiresAt/);
   assert.match(html,/cloudTokenExpiresAt=0/);
   assert.match(html,/jeton Cloud/i);
-  assert.doesNotMatch(html,/appforge-cloud-api\.appforge-licences-mg\.workers\.dev|afCloudEmail|afCloudPassword|afCloudOrg|v1\/auth\/login|organizations\//i);
+  assert.doesNotMatch(html,/appforge-license-api\.appforge-licences-mg\.workers\.dev|appforge-cloud-api\.appforge-licences-mg\.workers\.dev|afCloudEmail|afCloudPassword|afCloudOrg|v1\/auth\/login|organizations\//i);
   assert.match(html,/afCloudRead/);
   assert.match(html,/modifications conservées localement/i);
   assert.match(html,/Aucune copie locale n’a été supprimée/);
